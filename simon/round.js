@@ -133,6 +133,7 @@ Round.prototype.playStep = function(){
 	}
 
 	self.socket.emit(self.steps[self.step_iterator], {
+		id:  				self.step_iterator + 1,
 		hardwareAvailable: (arduino.serial != undefined)
 	});
 
@@ -144,15 +145,32 @@ Round.prototype.playStep = function(){
 	}
 	self.step_iterator++;
 
-	setTimeout(self.continuePlay, 100);		
+	self.waitRetry = 0;
+	setTimeout(self.waitUntilAllAckStep, 100);		
 }
 Round.prototype.continuePlay = function(){
 	arduino.stop();
 	self.socket.emit('simon-say');
 	setTimeout(self.playStep, self.play_speed);		
-
 }
 
+Round.prototype.waitUntilAllAckStep = function(data) {
+	self.waitRetry++;
+	if (self.waitRetry < 8){
+		for (token in self.players){
+			if(self.players[token].ackStep != self.step_iterator){
+				setTimeout(self.waitUntilAllAckStep, 10);
+				return
+			}
+		}
+	}
+	self.continuePlay();
+}
+
+Round.prototype.ackPlayerStep = function(data) {
+	if (self.players[data.token] != undefined)
+		self.players[data.token].ackStep = data.id;
+}
 Round.prototype.getColor = function(int){
 	switch(int){
 		case 1: return 'green';

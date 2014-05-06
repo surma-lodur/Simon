@@ -1,20 +1,36 @@
 var socket = io.connect("http://"+window.location.hostname);
 var token;
 var Client = Client || {};
-Client.audioElements = Client.audioElements || {};
 
-try {
-	Client.ctx = new(window.audioContext || window.webkitAudioContext);
-} catch(err) {
-}
-
+Client.greenBeep  = 415;
+Client.redBeep    = 310;
+Client.yellowBeep = 252;
+Client.blueBeep   = 209;
 
 
 // On Document Ready
 $(document).ready(function(){
+	try {
+		Client.ctx = new(window.audioContext || window.webkitAudioContext);
+	} catch(err) {
+		$('span#legacy-audio').html('\
+			<audio id="green" preload="auto" loop autobuffer></audio>\
+			<audio id="red" preload="auto" loop autobuffer></audio>\
+			<audio id="yellow" preload="auto" loop autobuffer></audio>\
+			<audio id="blue" preload="auto" loop autobuffer></audio>\
+			');
+		Client.audioElements = Client.audioElements || {};
+
+		$([Client.greenBeep, Client.redBeep, Client.yellowBeep, Client.blueBeep]).each(function(index, frequency){
+			Client.initalizeLegacyBeep(frequency);
+		});
+	}
+
+
 	$('button.simon').each(function(index, button){
 		$(button).on('click', Client.simonPressEventHandler)
 	});;
+
 	$('input#nick').on('change', function(){		
 		Client.changeNick();
 	});
@@ -32,6 +48,25 @@ $(document).ready(function(){
 $(window).unload(function(){
 	socket.emit('remove-player', {token: token});
 });
+
+
+Client.initalizeLegacyBeep = function(frequency){	
+	// Audioelement erstellen
+	if (Client.audioElements[frequency] == undefined) {
+		Client.audioElements[frequency]  = new Audio("");
+		// im DOM einfügen, sonst wird es nicht abgespielt
+		document.body.appendChild(Client.audioElements[frequency]);
+		
+		// herausfinden welcher Medientyp abgespielt werden kann
+		var canPlayType = Client.audioElements[frequency].canPlayType("audio/ogg");
+		if(canPlayType.match(/maybe|probably/i)) {
+			Client.audioElements[frequency].src = '' +frequency+ '.ogg';
+		} else {
+			Client.audioElements[frequency].src = '' +frequency+ '.mp3';
+		}
+	}
+}
+
 
 Client.simonPressEventHandler = function(){
 	socket.emit('button-pressed', { 
@@ -87,20 +122,6 @@ Client.beep = function(frequency){
     Client.osc.noteOn(0);
 }
 Client.legacyBeep = function(frequency){
-	// Audioelement erstellen
-	if (Client.audioElements[frequency] == undefined) {
-		Client.audioElements[frequency]  = new Audio("");
-		// im DOM einfügen, sonst wird es nicht abgespielt
-		document.body.appendChild(Client.audioElements[frequency]);
-		
-		// herausfinden welcher Medientyp abgespielt werden kann
-		var canPlayType = Client.audioElements[frequency].canPlayType("audio/ogg");
-		if(canPlayType.match(/maybe|probably/i)) {
-			Client.audioElements[frequency].src = '' +frequency+ '.ogg';
-		} else {
-			Client.audioElements[frequency].src = '' +frequency+ '.mp3';
-		}
-	}
 
 	Client.audioElement = Client.audioElements[frequency];
 	Client.audioElement.play();
@@ -112,6 +133,13 @@ Client.stopBeep = function(){
 
 	if (Client.audioElement != undefined)		
 		Client.audioElement.pause();
+}
+
+Client.ackStep = function(data){	
+	socket.emit('ack-step', {
+		id: data.id,
+		token: token
+	});
 }
 
 // ################
@@ -167,7 +195,7 @@ Client.allFailed = function() {
 	}, 2000)
 }
 Client.getWinner = function(data) {
-	logger('got winnter');
+	logger('got winner');
 	Client.disableButton();
 	$('.alert.winner').html(
 		'<center> Player '+ data.nick + ' wins</center>'
@@ -194,43 +222,47 @@ Client.unlock = function(){
 };
 
 Client.getGreen = function(data){
+	Client.ackStep(data);
 	if (data.hardwareAvailable)
 		return;
 	Client.resetColorState();
 	$('button.simon#green').removeClass('btn-success');
 	$('button.simon#green').addClass('active');
 	$('button.simon#green').addClass('btn-default');
-	Client.beep(415);
+	Client.beep(Client.greenBeep);
 };
 
 Client.getRed = function(data){
+	Client.ackStep(data);
 	if (data.hardwareAvailable)
 		return;
 	Client.resetColorState();
 	$('button.simon#red').removeClass('btn-danger');
 	$('button.simon#red').addClass('active');
 	$('button.simon#red').addClass('btn-default');
-	Client.beep(310);
+	Client.beep(Client.redBeep);
 };
 
 Client.getYellow = function(data) {
+	Client.ackStep(data);
 	if (data.hardwareAvailable)
 		return;
 	Client.resetColorState();
 	$('button.simon#yellow').removeClass('btn-warning');
 	$('button.simon#yellow').addClass('active');
 	$('button.simon#yellow').addClass('btn-default');
-	Client.beep(252);
+	Client.beep(Client.yellowBeep);
 };
 
 Client.getBlue = function(data) {
+	Client.ackStep(data);
 	if (data.hardwareAvailable)
 		return;
 	Client.resetColorState();
 	$('button.simon#blue').removeClass('btn-info');
 	$('button.simon#blue').addClass('active');
 	$('button.simon#blue').addClass('btn-default');
-	Client.beep(209);
+	Client.beep(Client.blueBeep);
 
 }
 
@@ -261,6 +293,10 @@ socket.on('green',       Client.getGreen);
 socket.on('red',         Client.getRed);
 socket.on('yellow',      Client.getYellow);
 socket.on('blue',        Client.getBlue);
+
+socket.on('keep-alive', function() {
+	socket.emit('keep-alive', {token: token});
+})
 
 
 function logger(data){

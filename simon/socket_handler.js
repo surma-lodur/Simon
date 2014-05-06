@@ -18,6 +18,7 @@ function logger(data){
 function Handler(app) {
 	io           = require('socket.io').listen(app, { log: false });
 	this.round   = new Round(io.sockets);
+	this.keepAliveTimer = {};
 	self 		 = this;
 	io.sockets.on('connection', this.handleConnection); 
 }
@@ -26,7 +27,7 @@ function reset(){
 	clearTimeout(timeout);
 	self.round = new Round(io.sockets);
 	io.sockets.emit('reset');
-	logger("---------- reset");
+	logger("---------- reset");	
 }
 
 var	timeout = setTimeout(reset, idle_time);
@@ -38,9 +39,9 @@ function retouch(){
 }
 
 Handler.prototype.handleConnection = function(socket){	
-	socket.on('request-token', function(){		
+	socket.on('request-token', function(){
 		socket.emit('token', {
-			token: guid.raw()
+			token: socket.id
 		});
 		retouch();
 		self.debugCallback();
@@ -53,16 +54,40 @@ Handler.prototype.handleConnection = function(socket){
 	socket.on('yellow', self.yellow);
 	socket.on('blue',   self.blue);
 	socket.on('remove-player', self.removePlayer);
+
+	socket.on('keep-alive', self.playerIsAlive);
+	socket.on('ack-step', function(data){
+		self.round.ackPlayerStep(data);
+	});
+	socket.on('disconnect', function(data) {
+		logger('disconnect ' + socket.id);
+		self.removePlayer({token: socket.id});
+	});
 }
 
 Handler.prototype.addPlayer = function(data){
 	self.round.addPlayer(data);
+	self.keepAlive();
 	self.sendStats();
 	self.debugCallback();
 }
 Handler.prototype.removePlayer = function(data) {
 	self.round.removePlayer(data);
 	self.resetOnAllFailed();
+	self.sendStats();
+}
+Handler.prototype.keepAlive = function(data){
+	/*io.sockets.emit('keep-alive');
+	for(token in self.round.player){
+		clearTimeout(self.keepAliveTimer[token]);
+		self.keepAliveTimer[token] = setTimeout(function(){
+			self.removePlayer({token: token});
+		},1000)
+	}*/
+}
+
+Handler.prototype.playerIsAlive = function(data){
+	clearTimeout(self.keepAliveTimer[data.token]);
 }
 
 Handler.prototype.changeNick = function(data){
