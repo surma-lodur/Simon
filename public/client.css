@@ -1,0 +1,21 @@
+@media (min-width: 1px){
+	.simon{
+		height: 125px;
+	}
+}
+@media (min-width: 768px){
+	.simon {
+		height: 125px;
+	}
+
+}
+@media (min-width: 992px){
+	.simon {
+		height: 155px;
+	}
+}
+@media (min-width: 1200px){
+	.simon {
+		height: 195px;
+	}
+}

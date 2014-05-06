@@ -1,0 +1,10 @@
+{ 
+	"name" : "Simon", 
+	"version" : "0.0.1", 
+	"dependencies" : { 
+		"serialport": "1.4.0", 
+		"socket.io":  "0.9.16", 
+		"jquery":     "2.1.1",
+		"guid":       "0.0.12"
+	}
+ }

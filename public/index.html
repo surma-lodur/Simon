@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>We play Simon</title>
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="client.js"></script>
+	<link rel="stylesheet" href="client.css">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<link type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+	<audio id="green" preload="auto" loop autobuffer>	
+		<source src="green.ogg"/>
+		<source src="green.mp3"/>
+	</audio>
+	<audio id="red" preload="auto" loop autobuffer>
+		<source src="red.ogg"/>
+		<source src="red.mp3"/>
+	</audio>
+	<audio id="yellow" preload="auto" loop autobuffer>
+		<source src="yellow.ogg"/>
+		<source src="yellow.mp3"/>
+	</audio>
+	<audio id="blue" preload="auto" loop autobuffer>
+		<source src="blue.ogg"/>
+		<source src="blue.mp3"/>
+	</audio>
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container">
+			<a class="navbar-brand" href="#">Simon</a>
+			<form class="navbar-form" role="form">
+				<div class="form-group">
+					<input type="nick" class="form-control" data="" id="nick" placeholder="Nickname">
+				</div>
+			</form>
+		</div>
+	</nav>
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-8 col-sm-offset-4">
+				<span id="messages"></span>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-3">
+				<span id="players"></span>
+			</div>
+			<div class="col-sm-8 col-sm-offset-1">
+
+				<div class="row">
+					<div class="col-xs-6">
+						<div class="btn-group btn-group-justified">
+							<div class="btn-group">
+								<button type="button" disabled="disabled" id="green" class="btn btn-success simon"></button>
+							</div>
+							<div class="btn-group">
+								<button type="button" disabled="disabled" id="red" class="btn btn-danger simon"></button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-6">
+						<div class="btn-group btn-group-justified">
+							<div class="btn-group">
+								<button type="button" disabled="disabled" id="yellow" class="btn btn-warning simon"></button>
+							</div>
+							<div class="btn-group">
+								<button type="button" disabled="disabled" id="blue" class="btn btn-info simon"></button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-12">
+				<br/>
+				<div class="alert alert-success winner" style="display:none">
+				</div>
+				<div class="alert alert-warning reset" style="display:none">
+					<center>New game starting</center>
+				</div>
+				<div class="alert alert-info loose" style="display:none">
+					<center>All player has failed</center>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="modal fade bs-example-modal-sm"  data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">Wrong</div>
+				<div class="modal-body">Wait until a player hits the sequence</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
